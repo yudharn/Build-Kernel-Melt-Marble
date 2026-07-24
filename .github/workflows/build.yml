@@ -101,7 +101,16 @@ jobs:
       - name: Clone Kernel Source
         run: |
           # this marble (SM7475) Melt Kernel
+          # Same reasoning as SUSFS below: cloning by branch name always
+          # checks out the branch tip at the time the job runs, so we
+          # capture the SHA to make the exact kernel commit used visible
+          # in logs/release notes.
           git clone --depth=1 -b ${{ inputs.kernel_branch }} ${{ inputs.kernel_source }} ${SOC}
+          cd ${SOC}
+          KERNEL_COMMIT=$(git rev-parse --short HEAD)
+          echo "KERNEL_COMMIT=${KERNEL_COMMIT}" >> $GITHUB_ENV
+          echo "==> Kernel source: using latest commit ${KERNEL_COMMIT} on branch ${{ inputs.kernel_branch }}"
+          cd ..
 
       - name: Download LLVM 22.1.8
         run: |
@@ -314,7 +323,7 @@ jobs:
            | 🧬 Kernel Base | android12-5.10 |
            | 🛠️ Build Scope | ZIP |
            | 📦 Source | ${{ inputs.kernel_source }} |
-           | ⚔️ Kernel branch | ${{ inputs.kernel_branch }}
+           | ⚔️ Kernel branch | ${{ inputs.kernel_branch }}@${KERNEL_COMMIT}
            | 💻 KSU Manager type | ${{ inputs.ksu_type }} 
            | 🔧 SuSFS Version | ${susfs_checkbox} 
            | ⚙️ BBG Patch | ${bbg_checkbox} 
@@ -323,5 +332,3 @@ jobs:
 
            ---
           " "${ZIP_FILE}"
-
-          
