@@ -109,7 +109,14 @@ jobs:
           cd ${SOC}
           KERNEL_COMMIT=$(git rev-parse --short HEAD)
           echo "KERNEL_COMMIT=${KERNEL_COMMIT}" >> $GITHUB_ENV
-          echo "==> Kernel source: using latest commit ${KERNEL_COMMIT} on branch ${{ inputs.kernel_branch }}"
+          # Strip a trailing .git so the URL points at the repo's web page
+          # (assumes a GitHub-style source, since /commit/<sha> is GitHub's
+          # path; a GitLab source would need /-/commit/<sha> instead).
+          KERNEL_SOURCE_WEB="${{ inputs.kernel_source }}"
+          KERNEL_SOURCE_WEB="${KERNEL_SOURCE_WEB%.git}"
+          KERNEL_COMMIT_URL="${KERNEL_SOURCE_WEB}/commit/${KERNEL_COMMIT}"
+          echo "KERNEL_COMMIT_URL=${KERNEL_COMMIT_URL}" >> $GITHUB_ENV
+          echo "==> Kernel source: using latest commit ${KERNEL_COMMIT} on branch ${{ inputs.kernel_branch }} (${KERNEL_COMMIT_URL})"
           cd ..
 
       - name: Download LLVM 22.1.8
@@ -227,7 +234,11 @@ jobs:
             cd susfs
             SUSFS_COMMIT=$(git rev-parse --short HEAD)
             echo "SUSFS_COMMIT=${SUSFS_COMMIT}" >> $GITHUB_ENV
-            echo "==> SUSFS: using latest commit ${SUSFS_COMMIT} on branch gki-android12-5.10"
+            # susfs4ksu is hosted on GitLab, whose commit path is /-/commit/<sha>
+            # (GitHub's is /commit/<sha> without the /-) — different host, different path.
+            SUSFS_COMMIT_URL="https://gitlab.com/simonpunk/susfs4ksu/-/commit/${SUSFS_COMMIT}"
+            echo "SUSFS_COMMIT_URL=${SUSFS_COMMIT_URL}" >> $GITHUB_ENV
+            echo "==> SUSFS: using latest commit ${SUSFS_COMMIT} on branch gki-android12-5.10 (${SUSFS_COMMIT_URL})"
             cp ./kernel_patches/50_add_susfs_in_gki-android12-5.10.patch ..
             cp ./kernel_patches/fs/* ../fs/
             cp ./kernel_patches/include/linux/* ../include/linux/
@@ -296,7 +307,7 @@ jobs:
           ZIP_FILE=$(ls *.zip)
 
           if [[ "${{ inputs.susfs }}" == true ]]; then
-            susfs_checkbox="Supported (susfs4ksu@${SUSFS_COMMIT})"
+            susfs_checkbox="Supported (susfs4ksu@[${SUSFS_COMMIT}](${SUSFS_COMMIT_URL}))"
           else
             susfs_checkbox="Unsupported"
           fi
@@ -323,7 +334,7 @@ jobs:
            | 🧬 Kernel Base | android12-5.10 |
            | 🛠️ Build Scope | ZIP |
            | 📦 Source | ${{ inputs.kernel_source }} |
-           | ⚔️ Kernel branch | ${{ inputs.kernel_branch }}@${KERNEL_COMMIT}
+           | ⚔️ Kernel branch | ${{ inputs.kernel_branch }}@[${KERNEL_COMMIT}](${KERNEL_COMMIT_URL})
            | 💻 KSU Manager type | ${{ inputs.ksu_type }} 
            | 🔧 SuSFS Version | ${susfs_checkbox} 
            | ⚙️ BBG Patch | ${bbg_checkbox} 
