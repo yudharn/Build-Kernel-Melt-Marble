@@ -195,6 +195,11 @@ jobs:
 
           cd ${SOC}
 
+          # Snapshot existing top-level dirs so we can detect whichever folder
+          # the selected KSU fork's setup.sh clones into below (the folder
+          # name differs per fork, e.g. "KernelSU" vs "KernelSU-Next").
+          KSU_DIRS_BEFORE=$(ls -d */ 2>/dev/null | sort || true)
+
           case "${{ inputs.ksu_type }}" in
 
             "None")
@@ -224,6 +229,30 @@ jobs:
               curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
               ;;
           esac
+
+          # ---- Capture KSU Manager source version (for release notes) ----
+          if [[ "${{ inputs.ksu_type }}" != "None" ]]; then
+            KSU_DIRS_AFTER=$(ls -d */ 2>/dev/null | sort || true)
+            # Whatever wasn't in the "before" snapshot is the dir setup.sh just cloned.
+            KSU_DIR=$(comm -13 <(echo "$KSU_DIRS_BEFORE") <(echo "$KSU_DIRS_AFTER") | head -n1 | sed 's:/$::')
+
+            if [[ -n "$KSU_DIR" && -d "${KSU_DIR}/.git" ]]; then
+              KSU_MANAGER_VERSION=$(cd "$KSU_DIR" && git describe --tags --always 2>/dev/null || echo "unknown")
+              KSU_MANAGER_COMMIT=$(cd "$KSU_DIR" && git rev-parse --short HEAD 2>/dev/null || echo "")
+              KSU_MANAGER_REPO_URL=$(cd "$KSU_DIR" && git remote get-url origin 2>/dev/null | sed 's/\.git$//')
+              KSU_MANAGER_COMMIT_URL="${KSU_MANAGER_REPO_URL}/commit/${KSU_MANAGER_COMMIT}"
+              echo "==> ${{ inputs.ksu_type }}: detected source dir '${KSU_DIR}', version ${KSU_MANAGER_VERSION} (${KSU_MANAGER_COMMIT}) - ${KSU_MANAGER_COMMIT_URL}"
+            else
+              echo "==> Could not auto-detect the ${{ inputs.ksu_type }} source dir; KSU Manager version will show as unknown."
+              KSU_MANAGER_VERSION="unknown"
+              KSU_MANAGER_COMMIT=""
+              KSU_MANAGER_COMMIT_URL=""
+            fi
+
+            echo "KSU_MANAGER_VERSION=${KSU_MANAGER_VERSION}" >> $GITHUB_ENV
+            echo "KSU_MANAGER_COMMIT=${KSU_MANAGER_COMMIT}" >> $GITHUB_ENV
+            echo "KSU_MANAGER_COMMIT_URL=${KSU_MANAGER_COMMIT_URL}" >> $GITHUB_ENV
+          fi
 
           if [[ "${{ inputs.susfs }}" == true ]]; then
             # Cloning by branch name (no tag/commit pin) always checks out the
@@ -330,6 +359,12 @@ jobs:
             rekernel_checkbox="Unsupported"
           fi
 
+          if [[ "${{ inputs.ksu_type }}" != "None" && -n "${KSU_MANAGER_COMMIT}" ]]; then
+            ksu_manager_version="${KSU_MANAGER_VERSION}@[${KSU_MANAGER_COMMIT}](${KSU_MANAGER_COMMIT_URL})"
+          else
+            ksu_manager_version="N/A"
+          fi
+
           gh release create "$REL_NAME" --title "$REL_NAME" --notes "# Kernel Melt Rebase for POCO F5 (marble)
 
            | | |
@@ -342,6 +377,7 @@ jobs:
            | 📦 Source | ${{ inputs.kernel_source }} |
            | ⚔️ Kernel branch | ${{ inputs.kernel_branch }}@[${KERNEL_COMMIT}](${KERNEL_COMMIT_URL})
            | 💻 KSU Manager type | ${{ inputs.ksu_type }} 
+           | 🏷️ KSU Manager version | ${ksu_manager_version} 
            | 🔧 SuSFS Version | ${susfs_checkbox} 
            | ⚙️ BBG Patch | ${bbg_checkbox} 
            | ⚙️ Re-Kernel | ${rekernel_checkbox}
