@@ -7,13 +7,13 @@ on:
         description: "Kernel source repo URL for marble (Melt Kernel). Paste any git URL here to override the default."
         required: true
         type: string
-        default: "https://github.com/yudharn/android_kernel_xiaomi_marble"
+        default: "https://github.com/Pzqqt/android_kernel_xiaomi_marble"
 
       kernel_branch:
         description: "Branch on kernel_source above"
         required: true
         type: string
-        default: "melt-Guxin12-A"
+        default: "melt-rebase"
 
       ksu_type:
         description: "KernelSU Version"
