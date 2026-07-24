@@ -289,7 +289,13 @@ jobs:
 
       - name: Make AnyKernel3
         run: |
-          ZIP_NAME="${KERNEL_NAME}_$(date -u +"%Y%m%d_%H%M")"
+          ZIP_NAME="${KERNEL_NAME}_${{ inputs.ksu_type }}"
+
+          if [[ "${{ inputs.susfs }}" == true ]]; then
+            ZIP_NAME="${ZIP_NAME}_SuSFS"
+          fi
+
+          ZIP_NAME="${ZIP_NAME}_$(date -u +"%Y%m%d")"
           git clone https://github.com/xxRDr/AnyKernel3.git
           
           cp ${SOC}/out/arch/arm64/boot/Image AnyKernel3/Image
@@ -329,7 +335,7 @@ jobs:
            | | |
            |:---|:---|
            | 📱 Device | POCO F5 (marble) • Redmi Note 12 Turbo (marble) |
-           | 🟠 ROM Support | HyperOS 3.0 Only |
+           | 🟠 ROM Support | HyperOS 3 A16 Only |
            | 🖥️ Kernel Name | ${KERNEL_NAME}
            | 🧬 Kernel Base | android12-5.10 |
            | 🛠️ Build Scope | ZIP |
@@ -343,3 +349,4 @@ jobs:
 
            ---
           " "${ZIP_FILE}"
+          
