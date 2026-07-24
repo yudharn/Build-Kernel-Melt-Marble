@@ -300,7 +300,7 @@ jobs:
 
       - name: Create GitHub Release
         run: |
-          BUILD_TIME=$(date -u +"%Y%m%d_%H%M")
+          BUILD_TIME=$(date -u +"%Y%m%d")
           REL_NAME="${KERNEL_NAME}-${BUILD_TIME}"
           echo "REL_NAME=${REL_NAME}" >> $GITHUB_ENV
           cd ${GITHUB_WORKSPACE}
