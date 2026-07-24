@@ -19,6 +19,7 @@ on:
         description: "KernelSU Version"
         required: true
         type: choice
+        default: ReSukiSU
         options:
           - None
           - Official-KernelSU
