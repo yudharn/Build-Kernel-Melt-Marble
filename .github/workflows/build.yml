@@ -27,7 +27,6 @@ on:
           - KowSU
           - ReSukiSU
           - SukiSUUltra
-          - NANSU
 
       custom_name:
         description: "kernel"
@@ -228,9 +227,6 @@ jobs:
 
             "SukiSUUltra")
               curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
-              ;;
-            "NANSU")
-              curl-LSs "https://raw.githubusercontent.com/Guxin12/NANSU/main/kernel/setup.sh" | bash -s main
               ;;
           esac
 
