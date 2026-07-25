@@ -65,7 +65,7 @@ jobs:
     env:
         GH_TOKEN: ${{ github.token }}
         SOC: marble
-        CCACHE_KEY: ccache-ecsv3-marble
+        CCACHE_KEY: ccache-ecsv3-marble-sm7475
     runs-on: ubuntu-latest
     permissions:
       contents: write
